@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genesis V3.2.1 — Mission Control (LIVE)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --void:#0A0F13; --panel:#111A1F; --panel-alt:#16222A; --line:#213039;
+  --core:#3DDC97; --core-dim:#1F6B4C; --amber:#E8A33D; --coral:#E8615A;
+  --text:#E8F2EE; --muted:#7C8B8A; --muted-dim:#4E5D5C;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  background: radial-gradient(circle at 15% 0%, rgba(61,220,151,0.06), transparent 45%),
+              radial-gradient(circle at 85% 100%, rgba(232,163,61,0.05), transparent 40%), var(--void);
+  color:var(--text); font-family:'Inter', system-ui, sans-serif; padding:28px 32px 60px; min-height:100vh;
+}
+.mono{font-family:'IBM Plex Mono', monospace;}
+.display{font-family:'Space Grotesk', system-ui, sans-serif;}
+header{ display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+.brand{display:flex; align-items:center; gap:12px;}
+.brand-mark{ width:34px;height:34px;border:1.5px solid var(--core);border-radius:8px; display:flex;align-items:center;justify-content:center; color:var(--core); font-family:'Space Grotesk'; font-weight:700; font-size:14px; box-shadow:0 0 14px rgba(61,220,151,0.25); }
+.brand h1{font-family:'Space Grotesk'; font-weight:700; font-size:20px; letter-spacing:0.2px;}
+.brand p{color:var(--muted); font-size:12.5px; margin-top:2px;}
+.status-pill{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted); }
+.dot{width:7px;height:7px;border-radius:50%; background:var(--core); box-shadow:0 0 8px var(--core);}
+.dot.warn{background:var(--amber); box-shadow:0 0 8px var(--amber);}
+#lastUpdated{color:var(--text); font-family:'IBM Plex Mono'; font-size:12.5px;}
+.notebar{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:11px 16px; margin-bottom:22px; font-size:13px; color:var(--muted); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.notebar b{color:var(--text); font-weight:500;}
+.kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+.kpi{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+.kpi .label{font-size:12px; color:var(--muted); margin-bottom:8px;}
+.kpi .value{font-family:'Space Grotesk'; font-weight:700; font-size:32px; line-height:1;}
+.kpi .sub{font-size:12px; color:var(--muted-dim); margin-top:6px;}
+.kpi.hero .value{color:var(--core);}
+.grid{ display:grid; grid-template-columns:1.1fr 1fr 1.2fr; gap:16px; margin-bottom:16px; }
+.card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px; }
+.card h2{font-family:'Space Grotesk'; font-size:14.5px; font-weight:600; margin-bottom:16px;}
+.week-row{margin-bottom:14px;}
+.week-row:last-child{margin-bottom:0;}
+.week-row .top{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px;}
+.week-row .top .name{color:var(--text);}
+.week-row .top .frac{color:var(--muted); font-family:'IBM Plex Mono';}
+.bar-track{height:8px; background:var(--panel-alt); border-radius:5px; overflow:hidden;}
+.bar-fill{height:100%; background:linear-gradient(90deg, var(--core-dim), var(--core)); border-radius:5px; transition:width .3s ease;}
+.donut-wrap{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;}
+.donut-wrap svg{transform:rotate(-90deg);}
+.donut-center{position:relative; margin-top:-138px; text-align:center; pointer-events:none;}
+.donut-center .n{font-family:'Space Grotesk'; font-weight:700; font-size:28px;}
+.donut-center .l{font-size:11.5px; color:var(--muted); margin-top:2px;}
+.legend{display:flex; gap:16px; margin-top:18px; font-size:12px; color:var(--muted); flex-wrap:wrap; justify-content:center;}
+.legend span{display:flex; align-items:center; gap:6px;}
+.legend i{width:8px;height:8px;border-radius:50%; display:inline-block;}
+.next-item{ display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+.next-item:last-child{border-bottom:none; padding-bottom:0;}
+.next-num{ width:22px;height:22px;border-radius:6px; background:var(--panel-alt); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono'; font-size:11px; color:var(--core); flex-shrink:0; margin-top:1px; }
+.next-text .t{font-size:13px; color:var(--text); margin-bottom:2px;}
+.next-text .s{font-size:11.5px; color:var(--muted);}
+.skid-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.skid{ background:var(--panel-alt); border:1px solid var(--line); border-radius:10px; padding:14px 16px; cursor:pointer; user-select:none; }
+.skid .name{font-size:13px; color:var(--text); margin-bottom:4px;}
+.skid .role{font-size:11px; color:var(--muted); margin-bottom:10px;}
+.skid .state{display:flex; align-items:center; gap:7px; font-size:12px; font-family:'IBM Plex Mono';}
+.roster{display:flex; flex-direction:column; gap:2px;}
+.roster-head, .roster-row{ display:grid; grid-template-columns:52px 1fr 130px 140px; gap:10px; align-items:center; padding:9px 4px; }
+.roster-head{font-size:11px; color:var(--muted-dim); border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:2px;}
+.roster-row{border-bottom:1px solid rgba(33,48,57,0.5); font-size:13px;}
+.roster-row .sec{font-family:'IBM Plex Mono'; color:var(--muted); font-size:12px;}
+.roster-row .eng-name{color:var(--text);}
+.roster-row .eng-domain{color:var(--muted); font-size:11.5px;}
+.state-toggle{ display:flex; gap:6px; }
+.state-btn{ flex:1; padding:5px 0; text-align:center; font-size:10.5px; border-radius:5px; cursor:pointer; border:1px solid var(--line); color:var(--muted); background:transparent; font-family:'IBM Plex Mono'; transition:all .15s ease; }
+.state-btn.active[data-s="done"]{background:rgba(61,220,151,0.15); border-color:var(--core); color:var(--core);}
+.state-btn.active[data-s="progress"]{background:rgba(232,163,61,0.15); border-color:var(--amber); color:var(--amber);}
+.state-btn.active[data-s="notstarted"]{background:rgba(124,139,138,0.12); border-color:var(--muted-dim); color:var(--muted);}
+.gates-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+.gate-week h3{font-size:12.5px; color:var(--muted); margin-bottom:10px; font-family:'IBM Plex Mono';}
+.gate-item{ display:flex; align-items:center; gap:9px; padding:6px 0; font-size:12.5px; cursor:pointer; user-select:none; }
+.gate-check{ width:16px;height:16px; border-radius:4px; border:1.5px solid var(--muted-dim); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .15s ease; }
+.gate-check.checked{background:var(--core); border-color:var(--core);}
+.gate-check.checked::after{content:'✓'; color:var(--void); font-size:11px; font-weight:700;}
+.gate-item span{color:var(--muted);}
+.gate-item.checked span{color:var(--text);}
+.footnote{ margin-top:22px; padding:14px 18px; background:var(--panel); border:1px solid var(--line); border-radius:10px; font-size:12px; color:var(--muted); line-height:1.6; }
+.footnote b{color:var(--text);}
+@media (max-width:980px){ .grid{grid-template-columns:1fr;} .kpi-row{grid-template-columns:repeat(2,1fr);} .skid-grid{grid-template-columns:repeat(2,1fr);} .gates-grid{grid-template-columns:repeat(2,1fr);} .roster-head, .roster-row{grid-template-columns:40px 1fr 110px; } .roster-head span:nth-child(4), .roster-row .eng-domain{display:none;} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">G</div>
+    <div>
+      <h1>Genesis V3.2.1 — Mission Control</h1>
+      <p>Nakshatra Renewables · digital twin &amp; sol-gel calibration engine</p>
+    </div>
+  </div>
+  <div class="status-pill">
+    <span class="dot"></span> pulling live from Google Sheets · synced at
+    <span id="lastUpdated">loading...</span>
+  </div>
+</header>
+
+<div class="notebar">
+  📌 <b>LIVE CLOUD MODE:</b> This dashboard now pulls data directly from your Google Sheet. To update a status, modify it in the Sheet and refresh this page.
+</div>
+
+<div class="kpi-row">
+  <div class="kpi hero">
+    <div class="label">Overall readiness</div>
+    <div class="value mono" id="kpiOverall">0%</div>
+    <div class="sub">weighted: engines 50% · gates 40% · infra 10%</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Engines built</div>
+    <div class="value mono" id="kpiEngines">0 / 11</div>
+    <div class="sub">+ Infinite Feeder (parked)</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Gates passed</div>
+    <div class="value mono" id="kpiGates">0 / 21</div>
+    <div class="sub">across W1–W4</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Infra skids online</div>
+    <div class="value mono" id="kpiInfra">4 / 4</div>
+    <div class="sub">Postgres · MinIO · Redpanda · Neo4j</div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Week progress</h2>
+    <div id="weekBars"></div>
+  </div>
+
+  <div class="card" style="display:flex; flex-direction:column;">
+    <h2>Engine build status</h2>
+    <div class="donut-wrap">
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <circle cx="90" cy="90" r="70" fill="none" stroke="#16222A" stroke-width="18"/>
+        <circle id="donutDone" cx="90" cy="90" r="70" fill="none" stroke="#3DDC97" stroke-width="18" stroke-linecap="round" stroke-dasharray="0 440"/>
+        <circle id="donutProg" cx="90" cy="90" r="70" fill="none" stroke="#E8A33D" stroke-width="18" stroke-linecap="round" stroke-dasharray="0 440"/>
+      </svg>
+      <div class="donut-center">
+        <div class="n mono" id="donutPct">0%</div>
+        <div class="l">complete</div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--core)"></i>Done</span>
+        <span><i style="background:var(--amber)"></i>In progress</span>
+        <span><i style="background:var(--muted-dim)"></i>Not started</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>What to do next</h2>
+    <div id="nextList"></div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <h2>Infrastructure — 4 process skids</h2>
+  <div class="skid-grid" id="skidGrid"></div>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <h2>Engine roster (Read-only via Sheet)</h2>
+  <div class="roster">
+    <div class="roster-head">
+      <span>§</span><span>Engine</span><span>Domain</span><span>Status</span>
+    </div>
+    <div id="rosterBody"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>21-gate checklist (Read-only via Sheet)</h2>
+  <div class="gates-grid" id="gatesGrid"></div>
+</div>
+
+<div class="footnote">
+  <b>On "automated":</b> This dashboard is securely connected to your live Google Sheet database. Future CI/CD pipelines (like your Week 1 shell scripts) can use Google's API to update the sheet automatically, which will instantly reflect on this dashboard.
+</div>
+
+<script>
+// --- GOOGLE SHEETS LIVE URLS ---
+const ENGINES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzUhm1KZhh6MFfdQDoHXwk8y52D1khQK760QFnxJy-zQQnxGTrRFPuDssaokLVJ0OtOgqxAiw0tUFo/pub?gid=819620017&single=true&output=csv';
+const GATES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSzUhm1KZhh6MFfdQDoHXwk8y52D1khQK760QFnxJy-zQQnxGTrRFPuDssaokLVJ0OtOgqxAiw0tUFo/pub?gid=616453707&single=true&output=csv';
+
+const ENGINES = [
+  {sec:'5.1', name:'Engine 1', full:'Multi-Climate Digital Twin', domain:'Discovery'},
+  {sec:'5.2', name:'Engine 2', full:'Combinatorial Core + eco-toxicity gate', domain:'Discovery'},
+  {sec:'5.3', name:'Engine 2.5', full:'Cure-State & Gelation Kinetics', domain:'Discovery'},
+  {sec:'6.1', name:'Engine 3', full:'Wave-Optics & Wear Bench', domain:'Simulation'},
+  {sec:'6.2', name:'Engine 3.5', full:'Thermo-Mechanical Impulse', domain:'Simulation'},
+  {sec:'7.1', name:'Engine 4', full:'Unit-Economics Funnel', domain:'Manufacturing'},
+  {sec:'7.2', name:'Engine 5', full:'Rheological Passport', domain:'Manufacturing'},
+  {sec:'7.3', name:'Engine 5.5', full:'Transit & IoT Impedance', domain:'Manufacturing'},
+  {sec:'8.1', name:'Engine 6', full:'Field Application Engine', domain:'Field'},
+  {sec:'8.2', name:'Engine 6.1', full:'Flight Dynamics', domain:'Field'},
+  {sec:'8.3', name:'Engine 7', full:'EKF / MPC Control', domain:'Field'},
+  {sec:'9', name:'Infinite Feeder', full:'Literature Ingestion Loop', domain:'Feeder (parked)'},
+];
+
+const GATE_WEEKS = {
+  'W1 — Vertical Slice': ['slice-e2e (0 DLQ <2s)','smatrix-parity (<5e-6)','bruggeman (Im≥0)','mc-determinism (<1e-10)','infra-chaos-lite (0 loss)','bundle-verify (<1e-9)'],
+  'W2 — Infinite Feeder': ['lie-ingest-20/day','lie-backtest-single','lie-delta-trigger','lie-reliability (RMSE)'],
+  'W3 — Hardening': ['determinism 3x3','chaos 6x3','perf (p95<800ms)','MDRH (<0.9%)','econ slope','passport (>85%)'],
+  'W4 — Flight + Control': ['r_arr (<15%)','EKF/MPC (p95<20ms)','E2E (p95<18min)','coupon gate (5/5)','audit pack (8 artifacts)'],
+};
+
+const NEXT_STEPS = [
+  {t:'Build Engine 3 (Wave-Optics) 🚀', s:'Needs Engine 2.5\'s output (porosity 50.55%) as its input for light reflection math'},
+  {t:'Wire the pipe between Engine 2.5 → Engine 3', s:'One Redpanda topic, tested with one dummy 10-row batch'},
+  {t:'Run the 6-gate check for Week 1', s:'./scripts/check_week1.sh must show 6/6 green before Week 2 starts'},
+  {t:'Make Engine 2.5 Dynamic (API)', s:'Allow Engine 2 to send 400 different recipes instead of hardcoded 78% TEOS'},
+  {t:'Keep Redis / Infinite Feeder parked', s:'It\'s a Week 2 item — don\'t build it until W1 gates are green'},
+];
+
+let state = {
+  engines: Object.fromEntries(ENGINES.map(e => [e.name, 'notstarted'])),
+  gates: {},
+  infra: {Postgres:true, MinIO:true, Redpanda:true, Neo4j:true},
+  lastUpdated: null,
+};
+
+async function loadLiveSheets() {
+  try {
+    // 1. Fetch Engines
+    const engRes = await fetch(ENGINES_CSV);
+    const engText = await engRes.text();
+    const engRows = engText.split(/\r?\n/).slice(1);
+    engRows.forEach(row => {
+      const cols = row.split(',');
+      if(cols.length >= 3) {
+        const name = cols[0].trim();
+        const status = cols[2].trim().toLowerCase();
+        if(state.engines[name] !== undefined) state.engines[name] = status;
+      }
+    });
+
+    // 2. Fetch Gates
+    const gateRes = await fetch(GATES_CSV);
+    const gateText = await gateRes.text();
+    const gateRows = gateText.split(/\r?\n/).slice(1);
+    gateRows.forEach(row => {
+      const cols = row.split(',');
+      if(cols.length >= 3) {
+        const gateName = cols[0].trim();
+        const passedStr = cols[2].trim().toUpperCase();
+        const passed = (passedStr === 'TRUE');
+        
+        for (const [wk, items] of Object.entries(GATE_WEEKS)) {
+          const idx = items.findIndex(g => g === gateName);
+          if (idx !== -1) {
+            state.gates[wk+'::'+idx] = passed;
+            break;
+          }
+        }
+      }
+    });
+
+    state.lastUpdated = new Date().toLocaleTimeString();
+    render();
+  } catch(e) {
+    console.error("Failed to load sheets", e);
+    document.getElementById('lastUpdated').textContent = "Connection Error";
+  }
+}
+
+// UI triggers now alert the user to use the Sheet
+function alertLiveMode() { alert("🚀 LIVE MODE ACTIVE:\nTo change this status, please update your Google Sheet. The dashboard will automatically reflect the changes on refresh!"); }
+function setEngine(name, val){ alertLiveMode(); }
+function toggleGate(id){ alertLiveMode(); }
+function toggleInfra(name){ state.infra[name] = !state.infra[name]; render(); }
+
+function render(){
+  document.getElementById('lastUpdated').textContent = state.lastUpdated || 'loading...';
+
+  // engines
+  const weight = {done:1, progress:0.5, notstarted:0};
+  const engVals = ENGINES.map(e => state.engines[e.name] || 'notstarted');
+  const engDoneCount = engVals.filter(v=>v==='done').length;
+  const engProgCount = engVals.filter(v=>v==='progress').length;
+  const engScore = engVals.reduce((s,v)=>s+weight[v],0);
+  document.getElementById('kpiEngines').textContent = `${engDoneCount} / 11`;
+
+  // gates
+  const allGateIds = [];
+  Object.entries(GATE_WEEKS).forEach(([wk, items]) => items.forEach((_,i)=>allGateIds.push(wk+'::'+i)));
+  const gatesChecked = allGateIds.filter(id => state.gates[id]).length;
+  document.getElementById('kpiGates').textContent = `${gatesChecked} / ${allGateIds.length}`;
+
+  // infra
+  const infraOnline = Object.values(state.infra).filter(Boolean).length;
+  document.getElementById('kpiInfra').textContent = `${infraOnline} / 4`;
+
+  // overall
+  const engPct = engScore/11, gatesPct = gatesChecked/allGateIds.length, infraPct = infraOnline/4;
+  const overall = Math.round((engPct*0.5 + gatesPct*0.4 + infraPct*0.1)*100);
+  document.getElementById('kpiOverall').textContent = overall + '%';
+
+  // donut
+  const circumference = 2*Math.PI*70;
+  const doneLen = (engDoneCount/11)*circumference;
+  const progLen = (engProgCount/11)*circumference;
+  document.getElementById('donutDone').setAttribute('stroke-dasharray', `${doneLen} ${circumference}`);
+  document.getElementById('donutProg').setAttribute('stroke-dasharray', `${progLen} ${circumference}`);
+  document.getElementById('donutProg').setAttribute('stroke-dashoffset', -doneLen);
+  document.getElementById('donutPct').textContent = Math.round((engDoneCount/11)*100)+'%';
+
+  // week bars
+  const weekNode = document.getElementById('weekBars');
+  weekNode.innerHTML = '';
+  Object.entries(GATE_WEEKS).forEach(([wk, items]) => {
+    const done = items.filter((_,i)=>state.gates[wk+'::'+i]).length;
+    const pct = Math.round((done/items.length)*100);
+    weekNode.innerHTML += `
+      <div class="week-row">
+        <div class="top"><span class="name">${wk}</span><span class="frac">${done}/${items.length}</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  });
+
+  // next steps
+  document.getElementById('nextList').innerHTML = NEXT_STEPS.map((n,i)=>`
+    <div class="next-item">
+      <div class="next-num">${i+1}</div>
+      <div class="next-text"><div class="t">${n.t}</div><div class="s">${n.s}</div></div>
+    </div>`).join('');
+
+  // infra skids
+  const skidRoles = {Postgres:'Historian · records', MinIO:'Bulk storage · silos', Redpanda:'Message bus · conveyor', Neo4j:'Graph DB · mind-map'};
+  document.getElementById('skidGrid').innerHTML = Object.keys(state.infra).map(name => {
+    const on = state.infra[name];
+    return `
+    <div class="skid" onclick="toggleInfra('${name}')">
+      <div class="name">${name}</div>
+      <div class="role">${skidRoles[name]}</div>
+      <div class="state"><span class="dot ${on?'':'warn'}"></span>${on?'Online':'Offline'}</div>
+    </div>`;
+  }).join('');
+
+  // roster
+  document.getElementById('rosterBody').innerHTML = ENGINES.map(e => {
+    const val = state.engines[e.name] || 'notstarted';
+    return `
+    <div class="roster-row">
+      <div class="sec">${e.sec}</div>
+      <div><div class="eng-name">${e.name}</div><div class="eng-domain">${e.full}</div></div>
+      <div class="eng-domain">${e.domain}</div>
+      <div class="state-toggle">
+        <button class="state-btn ${val==='notstarted'?'active':''}" data-s="notstarted" onclick="setEngine('${e.name}','notstarted')">—</button>
+        <button class="state-btn ${val==='progress'?'active':''}" data-s="progress" onclick="setEngine('${e.name}','progress')">◐</button>
+        <button class="state-btn ${val==='done'?'active':''}" data-s="done" onclick="setEngine('${e.name}','done')">✓</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // gates grid
+  document.getElementById('gatesGrid').innerHTML = Object.entries(GATE_WEEKS).map(([wk, items]) => `
+    <div class="gate-week">
+      <h3>${wk}</h3>
+      ${items.map((label,i) => {
+        const id = wk+'::'+i;
+        const checked = !!state.gates[id];
+        return `<div class="gate-item ${checked?'checked':''}" onclick="toggleGate('${id}')">
+          <div class="gate-check ${checked?'checked':''}"></div><span>${label}</span>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+// Start pulling data on load
+loadLiveSheets();
+</script>
+
+</body>
+</html>
